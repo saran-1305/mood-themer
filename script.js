@@ -22,6 +22,8 @@ const els = {
   applyPreview: document.getElementById('applyPreview'),
   wallpaper: document.getElementById('wallpaper'),
   wallpaperMode: document.getElementById('wallpaperMode'),
+  sharpSlider: document.getElementById('sharpSlider'),
+  sharpAuto: document.getElementById('sharpAuto'),
 };
 
 let human, stream, running = false, rafId = null;
@@ -33,14 +35,32 @@ let sameCount = 0;
 const STABLE_FRAMES = 6;
 const MIN_CONF = 0.35;
 
-// Wallpaper quality knobs
-const WALL_QUALITY = 1.8; // 1.5–2.2 = higher res
-const DPR_CAP      = 3;   // allow hi-DPI renders
+// ===== quality manager =====
+const DPR_CAP = 4;
+const dpr = () => Math.min(window.devicePixelRatio || 1, DPR_CAP);
+
+// auto picks a sharpness based on device & screen
+function autoSharpness() {
+  const dm = (navigator.deviceMemory || 4);  // 4GB default guess
+  const cpu = navigator.hardwareConcurrency || 4;
+  const px = Math.max(window.innerWidth, window.innerHeight);
+  // bigger screens + good cpu/mem -> higher sharpness
+  let base = 1.6;
+  if (px > 1400) base += 0.2;
+  if (cpu >= 8) base += 0.2;
+  if (dm >= 8) base += 0.2;
+  return Math.max(0.9, Math.min(2.6, base));
+}
+
+function currentSharpness() {
+  if (els.sharpAuto && els.sharpAuto.checked) return autoSharpness();
+  const v = parseFloat(els.sharpSlider?.value || '1.8');
+  return Math.max(0.8, Math.min(2.6, v));
+}
 
 // ===== helpers =====
 const pct = v => `${(v * 100).toFixed(1)}%`;
 const clamp01 = v => Math.max(0, Math.min(1, v));
-const dpr = () => Math.min(window.devicePixelRatio || 1, DPR_CAP);
 
 function applyMirror() {
   const mirrored = els.mirrorToggle?.checked;
@@ -50,14 +70,13 @@ function applyMirror() {
 }
 
 function applyThemeForMood(mood) {
-  // allow either auto or manual preview to set the theme
   if (!els.autoThemeToggle?.checked && !document.body.classList.contains('preview-active')) return;
   const classes = ['happy','sad','angry','surprised','fearful','disgusted','neutral'].map(m=>`theme-${m}`);
   document.body.classList.remove(...classes);
   document.body.classList.add(`theme-${mood.toLowerCase()}`);
 }
 
-// ===== AI-ish wallpaper (on-device canvas) =====
+// ===== on-device “AI style” wallpaper =====
 const wallCache = new Map();
 const MOOD_STYLES = {
   happy:     { gradA: 'rgba(38,208,124,.24)', gradB: 'rgba(14,19,39,.62)',   palette: ['#26d07c','#4ff0b8','#fff8b5','#2ccf9c'] },
@@ -91,7 +110,7 @@ async function generateWallpaper(mood='neutral', w=1920, h=1080){
   g.fillStyle = lg;
   g.fillRect(0,0,w,h);
 
-  // PASS 1: large soft blobs
+  // large soft blobs
   g.globalCompositeOperation = 'lighter';
   const bigCount = 160 + Math.floor(rnd()*80);
   for (let i=0;i<bigCount;i++){
@@ -105,7 +124,7 @@ async function generateWallpaper(mood='neutral', w=1920, h=1080){
     g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.fill();
   }
 
-  // PASS 2: small/high-frequency blobs (adds crisp details)
+  // fine details (crisper)
   const smallCount = 280 + Math.floor(rnd()*120);
   for (let i=0;i<smallCount;i++){
     const x = rnd()*w, y = rnd()*h, r = 10 + rnd()*70;
@@ -119,7 +138,7 @@ async function generateWallpaper(mood='neutral', w=1920, h=1080){
     g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.fill();
   }
 
-  // subtle grain (crisper)
+  // subtle grain
   g.globalCompositeOperation = 'source-over';
   const img = g.getImageData(0,0,w,h), data = img.data;
   const density = 0.03, nRange = 20, r2 = seededRand(7*3);
@@ -140,11 +159,10 @@ async function generateWallpaper(mood='neutral', w=1920, h=1080){
 
 async function applyGeneratedWallpaper(mood){
   if (!els.aiWallpaperToggle?.checked || !els.wallpaper) return;
-  const scale = WALL_QUALITY * dpr();
+  const scale = currentSharpness() * dpr();
   const w = Math.max(1280, Math.round(window.innerWidth  * scale));
   const h = Math.max(720,  Math.round(window.innerHeight * scale));
   const url = await generateWallpaper(mood, w, h);
-
   const ms = MOOD_STYLES[mood] || MOOD_STYLES.neutral;
   els.wallpaper.style.backgroundImage =
     `linear-gradient(135deg, ${ms.gradA}, ${ms.gradB}), url(${url})`;
@@ -152,10 +170,7 @@ async function applyGeneratedWallpaper(mood){
   els.wallpaper.style.backgroundPosition = 'center';
 }
 
-// regenerate helper
-async function regenerateCurrent(){
-  await applyGeneratedWallpaper(stableMood || 'neutral');
-}
+async function regenerateCurrent(){ await applyGeneratedWallpaper(stableMood || 'neutral'); }
 
 // ===== init human.js =====
 (async function init(){
@@ -173,12 +188,10 @@ async function regenerateCurrent(){
   try { await human.load(); await human.warmup(); }
   catch(e){ console.error(e); alert('Failed to load AI models. Check internet and refresh.'); return; }
 
-  // get labels for devices
+  // label access for devices
   try { const tmp = await navigator.mediaDevices.getUserMedia({video:true,audio:false}); tmp.getTracks().forEach(t=>t.stop()); } catch{}
 
   await listCameras();
-
-  // initial wallpaper
   applyGeneratedWallpaper('neutral');
 })();
 
@@ -250,13 +263,11 @@ async function loop(){
   const t0=performance.now();
   const result = await human.detect(els.video);
 
-  // overlays
   const ctx=els.overlay.getContext('2d');
   ctx.clearRect(0,0,els.overlay.width,els.overlay.height);
   human.draw.canvas(els.overlay);
   human.draw.face(els.overlay, result.face, { labels:false });
 
-  // summary
   const faces = result.face || [];
   els.facesText.textContent = String(faces.length);
   els.facesBar.style.width = `${Math.min(100,(faces.length/5)*100)}%`;
@@ -315,7 +326,6 @@ els.aiWallpaperToggle?.addEventListener('change', ()=>{
   else if (els.wallpaper) els.wallpaper.style.backgroundImage = '';
 });
 
-// preview (manual)
 els.applyPreview?.addEventListener('click', async ()=>{
   if (!els.previewMood) return;
   const mood = els.previewMood.value.toLowerCase();
@@ -327,10 +337,14 @@ els.applyPreview?.addEventListener('click', async ()=>{
   els.topMood.textContent = mood;
 });
 
-// Wallpaper Mode toggle (hide UI)
+// Wallpaper Mode toggle
 els.wallpaperMode?.addEventListener('click', ()=>{
   document.body.classList.toggle('wallpaper-only');
 });
+
+// sharpness controls
+els.sharpSlider?.addEventListener('input', ()=>{ if (!els.sharpAuto?.checked) regenerateCurrent(); });
+els.sharpAuto?.addEventListener('change', ()=>{ regenerateCurrent(); });
 
 // keyboard shortcuts
 window.addEventListener('keydown', (e)=>{
@@ -340,16 +354,26 @@ window.addEventListener('keydown', (e)=>{
   if (k==='c') snapshot();
   if (k==='m'){ if (els.mirrorToggle){ els.mirrorToggle.checked=!els.mirrorToggle.checked; applyMirror(); } }
   if (k==='t') els.themeToggle.click();
-  if (k==='w') document.body.classList.toggle('wallpaper-only'); // wallpaper mode
-  if (k==='r') regenerateCurrent(); // regenerate wallpaper
+  if (k==='w') document.body.classList.toggle('wallpaper-only');
+  if (k==='r') regenerateCurrent();
 });
 
-// regenerate wallpaper on resize (debounced)
+// regenerate on resize (debounced)
 let resizeTimer;
 window.addEventListener('resize', ()=>{
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(regenerateCurrent, 200);
 });
+
+// pause camera loop when tab hidden (saves CPU)
+document.addEventListener('visibilitychange', ()=>{
+  if (document.hidden){
+    if (running){ cancelAnimationFrame(rafId); rafId = null; }
+  } else {
+    if (running && !rafId) loop();
+  }
+});
+
 
 
 
