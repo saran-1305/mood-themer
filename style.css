@@ -1,0 +1,91 @@
+:root{
+  --bg:#0e1327; --panel:#131a3a; --text:#eef2ff; --muted:#aab4ff;
+  --accent:#6ea8fe; --stroke:#263066; --glass:rgba(0,0,0,.5);
+}
+body[data-theme="light"]{
+  --bg:#f6f8ff; --panel:#ffffff; --text:#0f1226; --muted:#5560b5;
+  --accent:#245bff; --stroke:#e5e9ff; --glass:rgba(255,255,255,.65);
+}
+
+/* Base */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  color:var(--text);
+  display:grid; grid-template-rows:auto 1fr auto; gap:16px; min-height:100vh;
+  background: transparent !important;           /* let wallpaper show */
+}
+body > * { position: relative; z-index: 1; }     /* content above wallpaper */
+
+.site-header{max-width:1100px;margin:18px auto 0;padding:0 16px;display:flex;gap:12px;align-items:center;justify-content:space-between}
+.subtitle{color:var(--muted);font-size:.95rem}
+.header-actions{display:flex;gap:8px}
+.grid{max-width:1100px;margin:0 auto;padding:0 16px 16px;display:grid;grid-template-columns:1.25fr .75fr;gap:16px}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+
+/* Wallpaper layer */
+#wallpaper{
+  position:fixed; inset:0; z-index:0;
+  background-position:center; background-size:cover; background-attachment:fixed;
+  filter:saturate(1.25) contrast(1.2) brightness(1.05);
+}
+
+/* Cards / Glass UI */
+.card{
+  background: rgba(12,18,40,.22);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:16px; padding:14px;
+  box-shadow:0 12px 28px rgba(0,0,0,.25);
+  backdrop-filter: blur(8px);
+}
+.media{position:relative;border-radius:12px;overflow:hidden;background:transparent}
+.media::before{content:"";position:absolute;inset:0;border-radius:12px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);pointer-events:none}
+video,canvas{width:100%;display:block;height:auto;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);background:transparent}
+.badge{position:absolute;left:12px;bottom:12px;background:var(--glass);backdrop-filter:blur(6px);padding:8px 12px;border-radius:10px;font-weight:700}
+
+/* Controls */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.select-wrap select{background:#0f1732;color:var(--text);border:1px solid var(--stroke);border-radius:10px;padding:10px 12px;min-width:200px}
+button{background:linear-gradient(90deg,var(--accent),#4c79ff);color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;transition:transform .15s,filter .2s}
+button:hover{transform:translateY(-2px);filter:saturate(1.1)}
+button:active{transform:translateY(0)} .primary{font-weight:700}
+button.ghost{background:transparent;color:var(--text);border:1px solid var(--stroke)}
+.switch{display:inline-flex;gap:8px;align-items:center;color:var(--muted)} .switch input{transform:translateY(1px)}
+
+/* Stats + Emotions */
+.stats{display:grid;gap:12px}
+.stat{background:#0f1732;border:1px solid var(--stroke);border-radius:12px;padding:10px}
+.stat.duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-label{color:var(--muted);font-size:.85rem;margin-bottom:6px}
+.stat-value{font-weight:800;font-size:1.1rem;margin-bottom:6px}
+.bar{height:10px;background:#1b2b66;border-radius:999px;overflow:hidden}
+.bar.small{height:8px}
+.fill{height:100%;width:0%;background:var(--accent);border-radius:999px;transition:width 120ms linear}
+.mini{color:var(--muted);font-size:.8rem;margin-top:6px}
+.emotions{margin-top:12px}
+.emotions h2{font-size:1rem;margin-bottom:8px}
+.emotion-list{display:grid;gap:8px}
+.emotion{padding:10px;border:1px solid var(--stroke);border-radius:12px;background:#0f1732}
+.emotion .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.emotion .name{text-transform:capitalize;font-weight:600}
+.emotion .pct{color:var(--muted);font-variant-numeric:tabular-nums}
+.emotion .bar{margin-top:6px;background:#14265d}
+.emotion .fill{background:linear-gradient(90deg,#6ea8fe,#86b6ff)}
+.muted{color:var(--muted)}
+.site-footer{max-width:1100px;margin:0 auto 18px;padding:0 16px;color:var(--muted)}
+kbd{background:#11193b;border:1px solid var(--stroke);border-bottom-width:3px;padding:2px 6px;border-radius:6px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem}
+
+/* More wallpaper visible on big screens */
+@media (min-width:1200px){
+  .media video,.media canvas{max-width:85%;margin:0 auto}
+  .grid{grid-template-columns:1.05fr 0.95fr}
+}
+
+/* Wallpaper-only mode */
+body.wallpaper-only header,
+body.wallpaper-only main,
+body.wallpaper-only footer{display:none}
+body.wallpaper-only #wallpaper{filter:none}
+
+

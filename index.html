@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mood Themer — On-Device</title>
+  <meta name="description" content="Detect mood and adapt wallpaper & theme. 100% in your browser." />
+  <link rel="stylesheet" href="style.css" />
+  <!-- Human.js (TensorFlow.js under the hood) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/human/dist/human.js"></script>
+</head>
+<body data-theme="dark">
+  <!-- Full-screen wallpaper layer -->
+  <div id="wallpaper" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <h1>🎭 Mood Themer</h1>
+    <p class="subtitle">Detect mood and adapt wallpaper & theme. 100% in your browser.</p>
+    <div class="header-actions">
+      <button id="themeToggle" class="ghost" aria-label="Toggle theme">🌗 Theme</button>
+      <button id="wallpaperMode" class="ghost" title="Toggle wallpaper-only view">🖼 Wallpaper</button>
+      <a class="ghost" target="_blank" rel="noreferrer" href="https://github.com/">⭐ Star</a>
+    </div>
+  </header>
+
+  <main class="grid">
+    <!-- LEFT: Camera + controls -->
+    <section class="card">
+      <div class="media">
+        <video id="video" autoplay muted playsinline aria-label="Camera preview"></video>
+        <canvas id="overlay" aria-hidden="true"></canvas>
+        <div id="moodBadge" class="badge">Mood: —</div>
+      </div>
+
+      <div class="toolbar" role="group" aria-label="Controls">
+        <label class="select-wrap" title="Choose camera">
+          <select id="cameraSelect" aria-label="Camera source"></select>
+        </label>
+
+        <button id="startBtn" class="primary">▶ Start</button>
+        <button id="stopBtn">⏹ Stop</button>
+        <button id="snapBtn">📸 Snapshot</button>
+
+        <label class="switch" title="Mirror (selfie) view">
+          <input type="checkbox" id="mirrorToggle" />
+          <span>Mirror</span>
+        </label>
+
+        <label class="switch" title="Auto theme by mood">
+          <input type="checkbox" id="autoThemeToggle" checked />
+          <span>Auto Theme</span>
+        </label>
+
+        <label class="switch" title="Generate wallpaper on-device">
+          <input type="checkbox" id="aiWallpaperToggle" checked />
+          <span>AI Wallpaper</span>
+        </label>
+
+        <!-- Preview mood without camera -->
+        <label class="select-wrap" title="Preview mood (no camera)">
+          <select id="previewMood">
+            <option>happy</option>
+            <option>sad</option>
+            <option>angry</option>
+            <option>surprised</option>
+            <option>fearful</option>
+            <option>disgusted</option>
+            <option selected>neutral</option>
+          </select>
+        </label>
+        <button id="applyPreview">🎨 Preview</button>
+      </div>
+    </section>
+
+    <!-- RIGHT: Stats -->
+    <aside class="card">
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Top Mood</div>
+          <div class="stat-value" id="topMood">—</div>
+          <div class="bar"><div class="fill" id="topConf" style="width:0%"></div></div>
+        </div>
+
+        <div class="stat duo">
+          <div>
+            <div class="stat-label">FPS</div>
+            <div class="bar small"><div class="fill" id="fpsBar" style="width:0%"></div></div>
+            <div class="mini" id="fpsText">—</div>
+          </div>
+          <div>
+            <div class="stat-label">Faces</div>
+            <div class="bar small"><div class="fill" id="facesBar" style="width:0%"></div></div>
+            <div class="mini" id="facesText">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="emotions">
+        <h2>Emotions</h2>
+        <div id="emotionList" class="emotion-list">
+          <div class="muted">No face detected.</div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="site-footer">
+    <small>Tip: <kbd>S</kbd> start, <kbd>X</kbd> stop, <kbd>C</kbd> capture, <kbd>M</kbd> mirror,
+      <kbd>T</kbd> theme, <kbd>W</kbd> wallpaper-only, <kbd>R</kbd> regenerate wallpaper.</small>
+  </footer>
+
+  <script defer src="script.js"></script>
+</body>
+</html>
+
+
+
+
+ 
+
