@@ -6,6 +6,7 @@
   <title>Mood Themer — On-Device</title>
   <meta name="description" content="Detect mood and adapt wallpaper & theme. 100% in your browser." />
   <link rel="stylesheet" href="style.css" />
+
   <!-- Human.js (TensorFlow.js under the hood) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/human/dist/human.js"></script>
 </head>
@@ -69,6 +70,16 @@
           </select>
         </label>
         <button id="applyPreview">🎨 Preview</button>
+
+        <!-- NEW: Auto + Sharpness controls for wallpaper -->
+        <label class="switch" title="Auto sharpness">
+          <input type="checkbox" id="sharpAuto" checked />
+          <span>Auto</span>
+        </label>
+
+        <label class="select-wrap" title="Wallpaper sharpness">
+          <input id="sharpSlider" type="range" min="0.8" max="2.6" step="0.1" value="1.8" />
+        </label>
       </div>
     </section>
 
@@ -105,8 +116,10 @@
   </main>
 
   <footer class="site-footer">
-    <small>Tip: <kbd>S</kbd> start, <kbd>X</kbd> stop, <kbd>C</kbd> capture, <kbd>M</kbd> mirror,
-      <kbd>T</kbd> theme, <kbd>W</kbd> wallpaper-only, <kbd>R</kbd> regenerate wallpaper.</small>
+    <small>
+      Tip: <kbd>S</kbd> start, <kbd>X</kbd> stop, <kbd>C</kbd> capture, <kbd>M</kbd> mirror,
+      <kbd>T</kbd> theme, <kbd>W</kbd> wallpaper-only, <kbd>R</kbd> regenerate wallpaper.
+    </small>
   </footer>
 
   <script defer src="script.js"></script>
@@ -116,5 +129,6 @@
 
 
  
+
 
 
